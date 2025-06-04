@@ -2,10 +2,6 @@ import os
 import re
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-from keep_alive import keep_alive
-
-# Додайте на початку коду
-keep_alive()
 
 # Ваш основний код бота...
 # Налаштування
