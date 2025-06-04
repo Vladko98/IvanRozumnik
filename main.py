@@ -106,13 +106,15 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.lower().strip()
 
+    # Ігнорувати короткі або беззмістовні повідомлення (менше 3 слів)
+    if len(text.split()) < 3:
+        return
+
     # Перевіряємо всі питання
     for question_pattern, answer in QA_PAIRS.items():
         if re.search(question_pattern, text, re.IGNORECASE):
             await update.message.reply_text(answer)
             return
-
-
 # --- Помилки ---
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"Update {update} caused error {context.error}")
