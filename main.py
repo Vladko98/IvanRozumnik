@@ -65,7 +65,7 @@ QA_PAIRS = {
     "Більше інформації про ігровий світ з'явиться в наступних спойлерах.",
 
     # ============ Технічні питання ============
-    r"\b(які|чи можна|чи піде|чи буде).*(системні вимоги|на мій|телефон|андроїд|ios|консолях|ps||підтримка геймпадів)\b":
+    r"\b(які|чт|чи буде).*(системні вимоги|піде на мій|телефон|андроїд|ios|консолях|ps||підтримка геймпадів)\b":
     "Технічні вимоги будуть опубліковані ближче до релізу.",
     r"\b(чи буде|які|чи є).*(руська|українська|англійська|мови|озвучка|субтитри|локалізація)\b":
     "Інформацію про підтримувані мови буде опубліковано пізніше.",
@@ -113,16 +113,11 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.lower().strip()
 
-    # Ігнорувати короткі або беззмістовні повідомлення (менше 3 слів)
-    if len(text.split()) < 2:
-        return
-
     # Перевіряємо всі питання
     for question_pattern, answer in QA_PAIRS.items():
         if re.search(question_pattern, text, re.IGNORECASE):
             await update.message.reply_text(answer)
             return
-
 # --- Помилки ---
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"Update {update} caused error {context.error}")
