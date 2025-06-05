@@ -1,8 +1,17 @@
 import os
 import re
+import threading
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-# Ваш основний код бота...
+from flask import Flask
+
+# Flask додаток для keep-alive
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is alive!"
+
 # Налаштування
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 BOT_USERNAME = "@IvanRozumnykBot"
@@ -79,9 +88,9 @@ QA_PAIRS = {
     r"\b(що|як).*(робити|допомогти|сприяти|прискорити|внести внесок|корисною|підтримати)\b":
     "Найкраща підтримка зараз - це активність у соцмережах (лайки, репости, коментарі).",
 }
+
 # Імена, на які бот реагує
 BOT_NAMES = ["іван", "іванко", "іванчик", "іван розумник", "ivan", "ivanko"]
-
 
 # --- Команди ---
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -89,7 +98,6 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "Привіт! Я чат-бот Trident Mobile. Задайте мені питання про гру!\n"
         "Наприклад: 'Коли реліз?', 'Де скачати гру?', 'Які офіційні посилання?'"
     )
-
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Список доступних команд:\n"
@@ -100,7 +108,6 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                                     "- Спойлери\n"
                                     "- Деталі проєкту\n"
                                     "- Офіційні посилання")
-
 
 # --- Обробка повідомлень ---
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -115,25 +122,40 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if re.search(question_pattern, text, re.IGNORECASE):
             await update.message.reply_text(answer)
             return
+
 # --- Помилки ---
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f"Update {update} caused error {context.error}")
 
+def run_bot():
+    """Запускає Telegram бота"""
+    print("Starting Trident Mobile bot...")
+    app_bot = Application.builder().token(BOT_TOKEN).build()
+
+    # Команди
+    app_bot.add_handler(CommandHandler("start", start_command))
+    app_bot.add_handler(CommandHandler("help", help_command))
+
+    # Повідомлення
+    app_bot.add_handler(MessageHandler(filters.TEXT, handle_message))
+
+    # Помилки
+    app_bot.add_error_handler(error)
+
+    print("Polling...")
+    app_bot.run_polling(poll_interval=3)
+
+def run_flask():
+    """Запускає Flask додаток"""
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
 
 # --- Запуск ---
 if __name__ == "__main__":
-    print("Starting Trident Mobile bot...")
-    app = Application.builder().token(BOT_TOKEN).build()
-
-    # Команди
-    app.add_handler(CommandHandler("start", start_command))
-    app.add_handler(CommandHandler("help", help_command))
-
-    # Повідомлення
-    app.add_handler(MessageHandler(filters.TEXT, handle_message))
-
-    # Помилки
-    app.add_error_handler(error)
-
-    print("Polling...")
-    app.run_polling(poll_interval=3)
+    # Запускаємо Flask в окремому потоці
+    flask_thread = threading.Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+    
+    # Запускаємо бота в головному потоці
+    run_bot()
