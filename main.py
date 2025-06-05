@@ -114,7 +114,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.lower().strip()
 
     # Ігнорувати короткі або беззмістовні повідомлення (менше 3 слів)
-    if len(text.split()) < 3:
+    if len(text.split()) < 2:
         return
 
     # Перевіряємо всі питання
